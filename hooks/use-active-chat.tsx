@@ -45,6 +45,7 @@ type ActiveChatContextValue = {
   votes: Vote[] | undefined;
   showCreditCardAlert: boolean;
   setShowCreditCardAlert: Dispatch<SetStateAction<boolean>>;
+  error: Error | undefined;
 };
 
 const ActiveChatContext = createContext<ActiveChatContextValue | null>(null);
@@ -98,6 +99,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
     regenerate,
     resumeStream,
     addToolApprovalResponse,
+    error,
   } = useChat<ChatMessage>({
     id: chatId,
     messages: initialMessages,
@@ -247,6 +249,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
       votes,
       showCreditCardAlert,
       setShowCreditCardAlert,
+      error,
     }),
     [
       chatId,
@@ -264,6 +267,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
       isLoading,
       votes,
       showCreditCardAlert,
+      error,
     ]
   );
 

@@ -1,6 +1,6 @@
 import { cosineDistance, desc, gt, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
 import { pgTable, text, timestamp, vector } from "drizzle-orm/pg-core";
+import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { EMBEDDING_DIM } from "@/lib/ai/embeddings";
 
@@ -18,7 +18,10 @@ function getDb() {
     clientSingleton = postgres(connectionString, { max: 1 });
     dbSingleton = drizzle(clientSingleton);
   }
-  return { client: clientSingleton, db: dbSingleton as ReturnType<typeof drizzle> };
+  return {
+    client: clientSingleton,
+    db: dbSingleton as ReturnType<typeof drizzle>,
+  };
 }
 
 export const dishEmbedding = pgTable("dish_embedding", {
@@ -48,7 +51,9 @@ export async function ensureEmbeddingSchema(): Promise<void> {
   `);
 }
 
-export async function upsertDishEmbedding(row: DishEmbeddingRow): Promise<void> {
+export async function upsertDishEmbedding(
+  row: DishEmbeddingRow
+): Promise<void> {
   const { db } = getDb();
   await db
     .insert(dishEmbedding)

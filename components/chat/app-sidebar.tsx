@@ -7,6 +7,7 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -67,24 +68,23 @@ export function AppSidebar({ user }: { user: AppUser | undefined }) {
 
   return (
     <>
-      <Sidebar collapsible="icon">
-        <SidebarHeader className="pb-0 pt-3">
+      <Sidebar collapsible="icon" className="bg-sidebar">
+        <SidebarHeader className="pb-0 pt-4 px-4">
           <SidebarMenu>
             <SidebarMenuItem className="flex flex-row items-center justify-between">
-              <div className="group/logo relative flex items-center justify-center">
-                <SidebarMenuButton
-                  asChild
-                  className="size-8 !px-0 items-center justify-center group-data-[collapsible=icon]:group-hover/logo:opacity-0"
-                  tooltip="Chatbot"
-                >
-                  <Link href="/" onClick={() => setOpenMobile(false)}>
-                    <MessageSquareIcon className="size-4 text-sidebar-foreground/50" />
-                  </Link>
-                </SidebarMenuButton>
+              <div className="group/logo relative flex items-center gap-3">
+                <Link href="/">
+                  <div className="flex items-center justify-center w-full overflow-hidden rounded-xl group-data-[collapsible=icon]:hidden ring-1 ring-white/20 shadow-md">
+                    <Image src="/logo.png" alt="Ilé Oúnjẹ Logo" width={180} height={64} className="object-cover w-full h-auto" />
+                  </div>
+                  <div className="hidden group-data-[collapsible=icon]:flex size-8 items-center justify-center rounded-lg bg-[#7C5432] text-white">
+                    <span className="font-bold text-lg">I.O.</span>
+                  </div>
+                </Link>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <SidebarMenuButton
-                      className="pointer-events-none absolute inset-0 size-8 opacity-0 group-data-[collapsible=icon]:pointer-events-auto group-data-[collapsible=icon]:group-hover/logo:opacity-100"
+                      className="absolute inset-0 size-8 opacity-0 group-data-[collapsible=icon]:pointer-events-auto"
                       onClick={() => toggleSidebar()}
                     >
                       <PanelLeftIcon className="size-4" />
@@ -101,41 +101,72 @@ export function AppSidebar({ user }: { user: AppUser | undefined }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="px-2 mt-6">
           <SidebarGroup className="pt-1">
+            <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+              Quick Start
+            </h3>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className="h-8 rounded-lg border border-sidebar-border text-[13px] text-sidebar-foreground/70 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                     onClick={() => {
                       setOpenMobile(false);
-                      router.push("/");
+                      router.push("/?query=Show+all+recipes");
                     }}
-                    tooltip="New Chat"
+                    tooltip="Show all recipes"
                   >
-                    <PenSquareIcon className="size-4" />
-                    <span className="font-medium">New chat</span>
+                    <span className="truncate">Show all recipes</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {user && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className="rounded-lg text-sidebar-foreground/40 transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => setShowDeleteAllDialog(true)}
-                      tooltip="Delete All Chats"
-                    >
-                      <TrashIcon className="size-4" />
-                      <span className="text-[13px]">Delete all</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push("/?query=Bean+dishes");
+                    }}
+                    tooltip="Bean dishes"
+                  >
+                    <span className="truncate">Bean dishes</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push("/?query=Soups");
+                    }}
+                    tooltip="Soups"
+                  >
+                    <span className="truncate">Soups</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push("/?query=Quick+meals");
+                    }}
+                    tooltip="Quick meals"
+                  >
+                    <span className="truncate">Quick meals</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+          <div className="mt-4 px-2 group-data-[collapsible=icon]:hidden">
+             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+               Recent
+             </h3>
+          </div>
           <SidebarHistory user={user} />
         </SidebarContent>
-        <SidebarFooter className="border-t border-sidebar-border pt-2 pb-3">
+        <SidebarFooter className="border-t border-sidebar-border pt-2 pb-4 px-3">
           <SidebarUserNav user={user} />
         </SidebarFooter>
         <SidebarRail />

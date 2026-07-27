@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { geolocation, ipAddress } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -8,9 +9,8 @@ import {
 } from "ai";
 import { checkBotId } from "botid/server";
 import { after } from "next/server";
-import { z } from "zod";
 import { createResumableStreamContext } from "resumable-stream";
-import { auth } from "@clerk/nextjs/server";
+import { z } from "zod";
 import { entitlements } from "@/lib/ai/entitlements";
 import {
   allowedModelIds,
