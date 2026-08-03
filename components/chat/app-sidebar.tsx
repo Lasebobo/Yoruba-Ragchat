@@ -228,11 +228,9 @@ export function AppSidebar({ user }: { user: AppUser | undefined }) {
                 </Tooltip>
               </SidebarMenuItem>
             )}
-            
-            <SidebarMenuItem className="w-full flex justify-center">
-              <SidebarUserNav user={user} />
-            </SidebarMenuItem>
           </SidebarMenu>
+          
+          <SidebarUserNav user={user} />
         </SidebarFooter>
       </Sidebar>
 
