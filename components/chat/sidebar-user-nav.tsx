@@ -32,8 +32,8 @@ export function SidebarUserNav({ user }: { user?: AppUser }) {
   const { signOut } = useClerk();
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
   const { setTheme, resolvedTheme } = useTheme();
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  const { state, isMobile } = useSidebar();
+  const isCollapsed = state === "collapsed" && !isMobile;
 
   const email =
     clerkUser?.primaryEmailAddress?.emailAddress ?? user?.email ?? "";

@@ -68,7 +68,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <ClerkProvider appearance={{ theme: shadcn }}>
           <ThemeProvider
             attribute="class"
