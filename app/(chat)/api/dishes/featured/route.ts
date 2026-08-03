@@ -7,7 +7,15 @@ export async function GET() {
     // Prefer dishes that have a picture
     const withPic = all.filter((d) => d.picture);
     const source = withPic.length >= 3 ? withPic : all;
-    const featured = source.slice(0, 3).map((d) => ({
+    
+    // Shuffle the array to get random featured recipes
+    const shuffled = [...source];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    const featured = shuffled.slice(0, 3).map((d) => ({
       _id: d._id,
       name: d.name ?? null,
       category: d.category ?? null,
@@ -17,11 +25,7 @@ export async function GET() {
         : null,
     }));
 
-    return Response.json(featured, {
-      headers: {
-        "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
-      },
-    });
+    return Response.json(featured);
   } catch (_error) {
     return Response.json([], { status: 200 });
   }

@@ -4,7 +4,9 @@ import {
   MessageSquareIcon,
   PanelLeftIcon,
   PenSquareIcon,
-  TrashIcon,
+  SearchIcon,
+  SettingsIcon,
+  UserIcon,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,11 +15,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
+import { useClerk } from "@clerk/nextjs";
 import {
   getChatHistoryPaginationKey,
   SidebarHistory,
 } from "@/components/chat/sidebar-history";
 import { SidebarUserNav } from "@/components/chat/sidebar-user-nav";
+import { SearchChatModal } from "@/components/chat/search-chat-modal";
 import {
   Sidebar,
   SidebarContent,
@@ -48,9 +52,13 @@ type AppUser = { id: string; email?: string | null };
 
 export function AppSidebar({ user }: { user: AppUser | undefined }) {
   const router = useRouter();
-  const { setOpenMobile, toggleSidebar } = useSidebar();
+  const { setOpenMobile, toggleSidebar, state } = useSidebar();
   const { mutate } = useSWRConfig();
+  const { openUserProfile } = useClerk();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const isCollapsed = state === "collapsed";
 
   const handleDeleteAll = () => {
     setShowDeleteAllDialog(false);
@@ -68,108 +76,162 @@ export function AppSidebar({ user }: { user: AppUser | undefined }) {
 
   return (
     <>
-      <Sidebar collapsible="icon" className="bg-sidebar">
-        <SidebarHeader className="pb-0 pt-4 px-4">
-          <SidebarMenu>
-            <SidebarMenuItem className="flex flex-row items-center justify-between">
-              <div className="group/logo relative flex items-center gap-3">
-                <Link href="/">
-                  <div className="flex items-center justify-center w-full overflow-hidden rounded-xl group-data-[collapsible=icon]:hidden ring-1 ring-white/20 shadow-md">
-                    <Image src="/logo.png" alt="Ilé Oúnjẹ Logo" width={180} height={64} className="object-cover w-full h-auto" />
-                  </div>
-                  <div className="hidden group-data-[collapsible=icon]:flex size-8 items-center justify-center rounded-lg bg-[#7C5432] text-white">
-                    <span className="font-bold text-lg">I.O.</span>
-                  </div>
-                </Link>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SidebarMenuButton
-                      className="absolute inset-0 size-8 opacity-0 group-data-[collapsible=icon]:pointer-events-auto"
-                      onClick={() => toggleSidebar()}
-                    >
-                      <PanelLeftIcon className="size-4" />
-                    </SidebarMenuButton>
-                  </TooltipTrigger>
-                  <TooltipContent className="hidden md:block" side="right">
-                    Open sidebar
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="group-data-[collapsible=icon]:hidden">
-                <SidebarTrigger className="text-sidebar-foreground/60 transition-colors duration-150 hover:text-sidebar-foreground" />
-              </div>
+      <Sidebar collapsible="icon" className="bg-[#F9F6F0] border-r-0">
+        <SidebarHeader className={`pt-6 pb-2 flex ${isCollapsed ? 'flex-col-reverse px-2' : 'flex-row px-4'} items-center justify-between gap-6 w-full`}>
+          <div className="flex items-center justify-center">
+            <Link href="/">
+              {isCollapsed ? (
+                <div className="size-12 relative flex items-center justify-center">
+                  <Image
+                    src="/logo-icon.png"
+                    alt="Ilé Oúnjẹ Logo Icon"
+                    fill
+                    sizes="48px"
+                    className="object-contain block dark:hidden"
+                  />
+                  <Image
+                    src="/logo-icon-dark.png"
+                    alt="Ilé Oúnjẹ Logo Icon"
+                    fill
+                    sizes="48px"
+                    className="object-contain hidden dark:block"
+                  />
+                </div>
+              ) : (
+                <div className="relative flex items-center justify-start w-[180px] h-11">
+                  <Image
+                    src="/logo.png"
+                    alt="Ilé Oúnjẹ Logo"
+                    fill
+                    sizes="180px"
+                    className="object-contain object-left block dark:hidden"
+                  />
+                  <Image
+                    src="/logo-dark.png"
+                    alt="Ilé Oúnjẹ Logo"
+                    fill
+                    sizes="180px"
+                    className="object-contain object-left hidden dark:block"
+                  />
+                </div>
+              )}
+            </Link>
+          </div>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SidebarMenuButton
+                className="size-10 flex items-center justify-center text-[#4A3522] hover:bg-[#7C5432]/10 transition-colors rounded-xl shrink-0"
+                onClick={() => toggleSidebar()}
+              >
+                <PanelLeftIcon className="size-6" strokeWidth={2.5} />
+              </SidebarMenuButton>
+            </TooltipTrigger>
+            <TooltipContent className="hidden md:block" side="right">
+              Toggle sidebar
+            </TooltipContent>
+          </Tooltip>
+        </SidebarHeader>
+
+        <SidebarContent className="px-2 mt-4 flex flex-col gap-4 items-center">
+          <SidebarMenu className="flex flex-col gap-4 w-full">
+            <SidebarMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton
+                    className="h-10 flex items-center justify-start text-[#4A3522] hover:bg-[#7C5432]/10 hover:text-[#4A3522] transition-colors rounded-xl font-medium"
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push("/");
+                    }}
+                  >
+                    <div className="flex items-center justify-center w-8">
+                      <PenSquareIcon className="size-6" strokeWidth={2.5} />
+                    </div>
+                    {!isCollapsed && <span className="ml-2">New Chat</span>}
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                <TooltipContent className="hidden md:block" side="right">
+                  New Chat
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton
+                    className="h-10 flex items-center justify-start text-[#4A3522] hover:bg-[#7C5432]/10 hover:text-[#4A3522] transition-colors rounded-xl font-medium"
+                    onClick={() => setIsSearchOpen(true)}
+                  >
+                    <div className="flex items-center justify-center w-8">
+                      <SearchIcon className="size-6" strokeWidth={2.5} />
+                    </div>
+                    {!isCollapsed && <span className="ml-2">Search</span>}
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                <TooltipContent className="hidden md:block" side="right">
+                  Search
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton
+                    className="h-10 flex items-center justify-start text-[#4A3522] hover:bg-[#7C5432]/10 hover:text-[#4A3522] transition-colors rounded-xl font-medium"
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push("/history");
+                    }}
+                  >
+                    <div className="flex items-center justify-center w-8">
+                      <MessageSquareIcon className="size-6" strokeWidth={2.5} />
+                    </div>
+                    {!isCollapsed && <span className="ml-2">All Chats</span>}
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                <TooltipContent className="hidden md:block" side="right">
+                  All Chats
+                </TooltipContent>
+              </Tooltip>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent className="px-2 mt-6">
-          <SidebarGroup className="pt-1">
-            <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
-              Quick Start
-            </h3>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                    onClick={() => {
-                      setOpenMobile(false);
-                      router.push("/?query=Show+all+recipes");
-                    }}
-                    tooltip="Show all recipes"
-                  >
-                    <span className="truncate">Show all recipes</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                    onClick={() => {
-                      setOpenMobile(false);
-                      router.push("/?query=Bean+dishes");
-                    }}
-                    tooltip="Bean dishes"
-                  >
-                    <span className="truncate">Bean dishes</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                    onClick={() => {
-                      setOpenMobile(false);
-                      router.push("/?query=Soups");
-                    }}
-                    tooltip="Soups"
-                  >
-                    <span className="truncate">Soups</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="h-9 rounded-lg text-[14px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                    onClick={() => {
-                      setOpenMobile(false);
-                      router.push("/?query=Quick+meals");
-                    }}
-                    tooltip="Quick meals"
-                  >
-                    <span className="truncate">Quick meals</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <div className="mt-4 px-2 group-data-[collapsible=icon]:hidden">
-             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-               Recent
-             </h3>
-          </div>
-          <SidebarHistory user={user} />
+
+          {!isCollapsed && (
+            <div className="w-full mt-4 flex-1 overflow-y-auto">
+              <SidebarHistory user={user} />
+            </div>
+          )}
         </SidebarContent>
-        <SidebarFooter className="border-t border-sidebar-border pt-2 pb-4 px-3">
-          <SidebarUserNav user={user} />
+
+        <SidebarFooter className="pb-6 px-2 flex flex-col gap-4 items-center">
+          <SidebarMenu className="flex flex-col gap-4 w-full">
+            <SidebarMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton
+                    className="h-10 flex items-center justify-start text-[#4A3522] hover:bg-[#7C5432]/10 hover:text-[#4A3522] transition-colors rounded-xl font-medium"
+                    onClick={() => openUserProfile()}
+                  >
+                    <div className="flex items-center justify-center w-8">
+                      <SettingsIcon className="size-6" strokeWidth={2.5} />
+                    </div>
+                    {!isCollapsed && <span className="ml-2">Settings</span>}
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                <TooltipContent className="hidden md:block" side="right">
+                  Settings
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem className="w-full flex justify-center">
+              <SidebarUserNav user={user} />
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
-        <SidebarRail />
       </Sidebar>
 
       <AlertDialog
@@ -192,6 +254,12 @@ export function AppSidebar({ user }: { user: AppUser | undefined }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SearchChatModal
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        user={user}
+      />
     </>
   );
 }

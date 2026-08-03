@@ -24,7 +24,6 @@ function PureChatHeader({
   if (state === "collapsed" && !isMobile) {
     return (
       <header className="sticky top-0 flex h-14 items-center justify-end bg-background px-4">
-         <UserButton />
       </header>
     );
   }
@@ -41,7 +40,6 @@ function PureChatHeader({
       </Button>
 
       <div className="ml-auto">
-        <UserButton />
       </div>
     </header>
   );
