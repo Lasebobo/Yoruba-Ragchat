@@ -52,13 +52,13 @@ type AppUser = { id: string; email?: string | null };
 
 export function AppSidebar({ user }: { user: AppUser | undefined }) {
   const router = useRouter();
-  const { setOpenMobile, toggleSidebar, state } = useSidebar();
+  const { setOpenMobile, toggleSidebar, state, isMobile } = useSidebar();
   const { mutate } = useSWRConfig();
   const { openUserProfile } = useClerk();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const isCollapsed = state === "collapsed";
+  const isCollapsed = state === "collapsed" && !isMobile;
 
   const handleDeleteAll = () => {
     setShowDeleteAllDialog(false);
@@ -208,24 +208,26 @@ export function AppSidebar({ user }: { user: AppUser | undefined }) {
 
         <SidebarFooter className="pb-6 px-2 flex flex-col gap-4 items-center">
           <SidebarMenu className="flex flex-col gap-4 w-full">
-            <SidebarMenuItem>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SidebarMenuButton
-                    className="h-10 flex items-center justify-start text-[#4A3522] hover:bg-[#7C5432]/10 hover:text-[#4A3522] transition-colors rounded-xl font-medium"
-                    onClick={() => openUserProfile()}
-                  >
-                    <div className="flex items-center justify-center w-8">
-                      <SettingsIcon className="size-6" strokeWidth={2.5} />
-                    </div>
-                    {!isCollapsed && <span className="ml-2">Settings</span>}
-                  </SidebarMenuButton>
-                </TooltipTrigger>
-                <TooltipContent className="hidden md:block" side="right">
-                  Settings
-                </TooltipContent>
-              </Tooltip>
-            </SidebarMenuItem>
+            {user && (
+              <SidebarMenuItem>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarMenuButton
+                      className="h-10 flex items-center justify-start text-[#4A3522] hover:bg-[#7C5432]/10 hover:text-[#4A3522] transition-colors rounded-xl font-medium"
+                      onClick={() => openUserProfile()}
+                    >
+                      <div className="flex items-center justify-center w-8">
+                        <SettingsIcon className="size-6" strokeWidth={2.5} />
+                      </div>
+                      {!isCollapsed && <span className="ml-2">Settings</span>}
+                    </SidebarMenuButton>
+                  </TooltipTrigger>
+                  <TooltipContent className="hidden md:block" side="right">
+                    Settings
+                  </TooltipContent>
+                </Tooltip>
+              </SidebarMenuItem>
+            )}
             
             <SidebarMenuItem className="w-full flex justify-center">
               <SidebarUserNav user={user} />
