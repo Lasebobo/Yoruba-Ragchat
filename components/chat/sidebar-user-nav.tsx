@@ -2,7 +2,6 @@
 
 import { SignInButton, SignUpButton, useClerk, useUser } from "@clerk/nextjs";
 import { ChevronUp } from "lucide-react";
-import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +15,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useLanguage } from "@/hooks/use-language";
 import { LoaderIcon } from "./icons";
 
 type AppUser = { id: string; email?: string | null };
@@ -31,7 +31,7 @@ function emailToHue(email: string): number {
 export function SidebarUserNav({ user }: { user?: AppUser }) {
   const { signOut } = useClerk();
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-  const { setTheme, resolvedTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const { state, isMobile } = useSidebar();
   const isCollapsed = state === "collapsed" && !isMobile;
 
@@ -124,13 +124,14 @@ export function SidebarUserNav({ user }: { user?: AppUser }) {
             side="top"
           >
             <DropdownMenuItem
-              className="cursor-pointer text-[13px]"
-              data-testid="user-nav-item-theme"
+              className="cursor-pointer text-[13px] gap-2"
+              data-testid="user-nav-item-language"
               onSelect={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+                setLanguage(language === "en" ? "yo" : "en")
               }
             >
-              {`Toggle ${resolvedTheme === "light" ? "dark" : "light"} mode`}
+              <span className="text-base leading-none">{language === "en" ? "🇳🇬" : "🇬🇧"}</span>
+              {language === "en" ? "Switch to Yorùbá" : "Switch to English"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">

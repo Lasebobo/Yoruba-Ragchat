@@ -172,6 +172,22 @@ const KEYWORD_STOPWORDS = new Set([
   "eat",
   "eaten",
   "list",
+  "bawo",
+  "ki",
+  "ni",
+  "se",
+  "je",
+  "dey",
+  "na",
+  "abeg",
+  "wetin",
+  "berekete",
+  "far",
+  "sho",
+  "wa",
+  "pa",
+  "body",
+  "bodu",
 ]);
 
 /** Ranked dish ids from lexical scoring: name hits weigh most, body mentions capped. */
@@ -263,5 +279,5 @@ export async function searchDishes(
   );
 
   const ranked = await getDishesByIds(fusedIds);
-  return ranked.length > 0 ? ranked.slice(0, limit) : dishes.slice(0, limit);
+  return ranked.slice(0, limit);
 }

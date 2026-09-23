@@ -1,14 +1,39 @@
 "use client";
 
-import { PanelLeftIcon } from "lucide-react";
-import Link from "next/link";
+import { MoonIcon, PanelLeftIcon, SunIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import { VercelIcon } from "./icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { VisibilityType } from "./visibility-selector";
 
-import { UserButton } from "@clerk/nextjs";
+function ThemeToggle() {
+  const { setTheme, resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDark ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        {isDark ? "Light mode" : "Dark mode"}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 function PureChatHeader({
   chatId,
@@ -24,6 +49,7 @@ function PureChatHeader({
   if (state === "collapsed" && !isMobile) {
     return (
       <header className="sticky top-0 flex h-14 items-center justify-end bg-background px-4">
+        <ThemeToggle />
       </header>
     );
   }
@@ -40,6 +66,7 @@ function PureChatHeader({
       </Button>
 
       <div className="ml-auto">
+        <ThemeToggle />
       </div>
     </header>
   );

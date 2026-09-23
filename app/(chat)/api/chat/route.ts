@@ -68,7 +68,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { id, message, messages, selectedChatModel, selectedVisibilityType } =
+    const { id, message, messages, selectedChatModel, selectedVisibilityType, selectedLanguage } =
       requestBody;
 
     const [, { userId }] = await Promise.all([
@@ -208,23 +208,31 @@ export async function POST(request: Request) {
     const modelMessages = await convertToModelMessages(uiMessages);
 
     // ---- Standard RAG: retrieve first, then a SINGLE generation ----
-    // Retrieve the relevant dish(es) ourselves rather than letting the model
-    // call a tool. This keeps it to one model call per message (half the API
-    // calls, so we stay within Gemini's free-tier limits) and gives us exact,
-    // deterministic control over how many dish cards show: one card for a
-    // specific-dish question, several only for a list/recommendation request.
     const latestUserText = getTextFromMessage(
       (uiMessages.at(-1) ?? message) as ChatMessage
     );
+    
+    // Multi-turn context: if the current query is very short, prepend the previous user query
+    let queryText = latestUserText;
+    if (uiMessages.length > 2 && queryText.split(/\s+/).length <= 4) {
+      const prevUserMsg = uiMessages.slice(-3, -2).find((m) => m.role === "user");
+      if (prevUserMsg) {
+        queryText = `${getTextFromMessage(prevUserMsg as ChatMessage)} ${queryText}`;
+      }
+    }
+
     const wantsMany =
       /\b(recommend|list|suggest|options?|several|some|a few|what|which)\b/i.test(
-        latestUserText
+        queryText
       ) &&
       /\b(dish|dishes|food|foods|meal|meals|snack|snacks|soup|soups|swallow|recipe|recipes|option|options)\b/i.test(
-        latestUserText
+        queryText
       );
-    const retrievedDishes = await retrieveDishes(
-      latestUserText,
+
+    const isGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|how are you|what can you do|who are you|thanks|thank you|bawo\s*ni+|e\s*kaaro|e\s*ku\s*irole|e\s*ku\s*ale|e\s*kaasan|pele\s*o|o\s*da\s*aro|kilode|se\s*alafia\s*ni|how\s*far|wetin\s*dey|na\s*you\s*berekete|how\s*bodu|how\s*body|how\s*you\s*dey|abeg|sowapa|sho\s*wa\s*pa)\b/i.test(latestUserText.trim());
+
+    const retrievedDishes = isGreeting ? [] : await retrieveDishes(
+      queryText,
       wantsMany ? 5 : 1
     );
 
@@ -234,6 +242,9 @@ export async function POST(request: Request) {
       category: dish.category ?? null,
       picture: dish.picture ?? null,
       ingredients: dish.ingredients ?? [],
+      history: dish.backgroundText ?? null,
+      regionalVariations: dish.additionalInfoText ?? null,
+      cookingInstructions: dish.recipeText ? dish.recipeText.split('\n').filter(s => s.trim()) : null,
     }));
 
     const dishContext =
@@ -248,6 +259,7 @@ export async function POST(request: Request) {
                 .join("; ");
               return [
                 `Dish ${i + 1}: ${dish.name ?? "Unknown"}`,
+                `ID: ${dish._id}`,
                 dish.category && `Category: ${dish.category}`,
                 dish.backgroundText && `Background: ${dish.backgroundText}`,
                 ingredients && `Ingredients: ${ingredients}`,
@@ -260,13 +272,15 @@ export async function POST(request: Request) {
             .join("\n\n---\n\n")
         : "No matching dishes were found in the knowledge base.";
 
-    const ragSystem = `${systemPrompt({ requestHints, supportsTools: false })}
+    const ragSystem = `${systemPrompt({ requestHints, supportsTools: false, language: selectedLanguage ?? "en" })}
 
-Retrieved dish information (answer using ONLY this — do not invent dishes, ingredients, origins, or steps):
+Retrieved dish information:
+(If the user is asking a recipe question, answer using ONLY this — do not invent dishes, ingredients, origins, or steps.)
+(If the user is just greeting you or chatting off-topic, IGNORE these retrieved dishes entirely and just respond to their chat.)
 
 ${dishContext}
 
-The interface displays each retrieved dish's picture as a card BELOW your text, so write the full written details first and never paste image URLs.`;
+When you cite information from a retrieved dish, add a small superscript number like [1] after the claim. Do NOT include a Sources section or any links at the end — the dish card already serves as the visual citation.`;
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {

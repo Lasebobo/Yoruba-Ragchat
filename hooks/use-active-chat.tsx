@@ -3,12 +3,14 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import {
   createContext,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -22,6 +24,7 @@ import { getChatHistoryPaginationKey } from "@/components/chat/sidebar-history";
 import { toast } from "@/components/chat/toast";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { useAutoResume } from "@/hooks/use-auto-resume";
+import { useLanguage } from "@/hooks/use-language";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
 import { ChatbotError } from "@/lib/errors";
@@ -59,11 +62,34 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { setDataStream } = useDataStream();
   const { mutate } = useSWRConfig();
+  const { isSignedIn } = useUser();
+  const { language } = useLanguage();
+  const languageRef = useRef(language);
+  languageRef.current = language;
+
+  const ANON_SESSION_KEY = "anon-chat-session";
 
   const chatIdFromUrl = extractChatId(pathname);
   const isNewChat = !chatIdFromUrl;
   const newChatIdRef = useRef(generateUUID());
   const prevPathnameRef = useRef(pathname);
+
+  // For anonymous users, try to restore the previous session's chatId on mount
+  const restoredRef = useRef(false);
+  if (!restoredRef.current && isNewChat && !isSignedIn) {
+    try {
+      const stored = sessionStorage.getItem(ANON_SESSION_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.chatId && parsed.messages?.length > 0) {
+          newChatIdRef.current = parsed.chatId;
+        }
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+    restoredRef.current = true;
+  }
 
   if (isNewChat && prevPathnameRef.current !== pathname) {
     newChatIdRef.current = generateUUID();
@@ -83,8 +109,25 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
     { revalidateOnFocus: false }
   );
 
+  // For anonymous users, restore messages from sessionStorage
+  const getAnonInitialMessages = useCallback((): ChatMessage[] => {
+    if (isSignedIn) return [];
+    try {
+      const stored = sessionStorage.getItem(ANON_SESSION_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.chatId === chatId && parsed.messages?.length > 0) {
+          return parsed.messages;
+        }
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+    return [];
+  }, [isSignedIn, chatId]);
+
   const initialMessages: ChatMessage[] = isNewChat
-    ? []
+    ? getAnonInitialMessages()
     : (chatData?.messages ?? []);
   const visibility: VisibilityType = isNewChat
     ? "private"
@@ -145,6 +188,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
               : { message: lastMessage, messages: request.messages }),
             selectedChatModel: DEFAULT_CHAT_MODEL,
             selectedVisibilityType: visibility,
+            selectedLanguage: languageRef.current,
             ...request.body,
           },
         };
@@ -169,6 +213,19 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
       }
     },
   });
+
+  // Persist anonymous messages to sessionStorage so they survive refresh
+  useEffect(() => {
+    if (isSignedIn || messages.length === 0) return;
+    try {
+      sessionStorage.setItem(
+        ANON_SESSION_KEY,
+        JSON.stringify({ chatId, messages })
+      );
+    } catch {
+      // sessionStorage unavailable or quota exceeded
+    }
+  }, [messages, chatId, isSignedIn]);
 
   const loadedChatIds = useRef(new Set<string>());
 

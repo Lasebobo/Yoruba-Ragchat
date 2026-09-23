@@ -129,8 +129,24 @@ const PurePreviewMessage = ({
     // message (below the written details — images last).
     if (type === "data-dishes") {
       const dishes = ("data" in part ? part.data : []) as Dish[];
+      
+      const fullText = message.parts
+        ?.filter((p) => p.type === "text" || p.type === "reasoning")
+        .map((p) => (p as { text?: string }).text ?? "")
+        .join(" ")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
       for (const dish of dishes ?? []) {
-        dishCards.push(dish);
+        const dishName = (dish.name ?? "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+          
+        if (dishName && fullText.includes(dishName)) {
+          dishCards.push(dish);
+        }
       }
       return null;
     }
