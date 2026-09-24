@@ -63,6 +63,7 @@ function PureMessages({
   return (
     <div className="relative flex-1 bg-background">
       <div 
+        suppressHydrationWarning
         className={cn(
           "absolute inset-0 overflow-y-auto pointer-events-auto",
           (messages.length > 0 || isLoading) && "hidden"
@@ -71,6 +72,7 @@ function PureMessages({
         <Greeting chatId={chatId} sendMessage={sendMessage} />
       </div>
       <div
+        suppressHydrationWarning
         className={cn(
           "absolute inset-0 touch-pan-y overflow-y-auto",
           messages.length > 0

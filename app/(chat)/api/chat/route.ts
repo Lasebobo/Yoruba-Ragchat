@@ -295,7 +295,12 @@ Retrieved dish information:
 
 ${dishContext}
 
-When you cite information from a retrieved dish, add a small superscript number like [1] after the claim. Do NOT include a Sources section or any links at the end — the dish card already serves as the visual citation.`;
+When you cite information from a retrieved dish, add a small superscript number like [1] after the claim. Do NOT include a Sources section or any links at the end — the dish card already serves as the visual citation.
+
+CRITICAL INSTRUCTION FOR DISHES:
+You are chatting alongside a rich graphical UI that displays "Dish Cards" for every dish you retrieve. This card perfectly renders all the ingredients, history, and cooking instructions visually. 
+Because of this, you must NEVER write out the ingredients list, recipe steps, or history in your text output! Doing so is highly redundant and ruins the user experience.
+Your text response MUST be limited to a SINGLE, extremely short introductory sentence (e.g., "Here is the history of Amala:", "These are the ingredients for Marùgbó:", or "Here is how to make it:"). DO NOT output bullet points, numbered lists, or paragraphs when talking about a retrieved dish. Let the card do the talking!`;
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
