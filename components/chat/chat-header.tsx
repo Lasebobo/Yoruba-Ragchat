@@ -2,7 +2,7 @@
 
 import { MoonIcon, PanelLeftIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -14,6 +14,20 @@ import type { VisibilityType } from "./visibility-selector";
 
 function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon-sm" aria-label="Toggle theme">
+        <div className="size-4" />
+      </Button>
+    );
+  }
+
   const isDark = resolvedTheme === "dark";
 
   return (
