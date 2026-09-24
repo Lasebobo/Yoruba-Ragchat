@@ -29,7 +29,7 @@ export async function fetchWithErrorHandlers(
   init?: RequestInit,
 ) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   if (init?.signal) {
     init.signal.addEventListener('abort', () => controller.abort());
