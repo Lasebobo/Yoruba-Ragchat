@@ -144,7 +144,8 @@ const PurePreviewMessage = ({
       return null;
     }
 
-    // Backward-compat: older messages persisted as an agentic tool call.
+    // For tool-capable models, dishes are retrieved via the `searchDishes` tool.
+    // For non-tool models, this also provides backward compatibility for older persisted messages.
     if (type === "tool-searchDishes") {
       if (
         part.state === "output-available" &&
