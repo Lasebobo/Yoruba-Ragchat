@@ -212,10 +212,11 @@ export async function POST(request: Request) {
       (uiMessages.at(-1) ?? message) as ChatMessage
     );
     
-    // Multi-turn context: if the current query is very short, prepend the previous user query
+    // Multi-turn context: if the current query is short, prepend the previous user query
     let queryText = latestUserText;
-    if (uiMessages.length > 2 && queryText.split(/\s+/).length <= 4) {
-      const prevUserMsg = uiMessages.slice(-3, -2).find((m) => m.role === "user");
+    if (uiMessages.length > 2 && queryText.split(/\s+/).length <= 8) {
+      const prevUserMsgs = uiMessages.filter((m) => m.role === "user");
+      const prevUserMsg = prevUserMsgs.length > 1 ? prevUserMsgs[prevUserMsgs.length - 2] : null;
       if (prevUserMsg) {
         queryText = `${getTextFromMessage(prevUserMsg as ChatMessage)} ${queryText}`;
       }
@@ -297,10 +298,10 @@ ${dishContext}
 
 When you cite information from a retrieved dish, add a small superscript number like [1] after the claim. Do NOT include a Sources section or any links at the end — the dish card already serves as the visual citation.
 
-CRITICAL INSTRUCTION FOR DISHES:
+${retrievedDishes.length > 0 ? `CRITICAL INSTRUCTION FOR DISHES:
 You are chatting alongside a rich graphical UI that displays "Dish Cards" for every dish you retrieve. This card perfectly renders all the ingredients, history, and cooking instructions visually. 
 Because of this, you must NEVER write out the ingredients list, recipe steps, or history in your text output! Doing so is highly redundant and ruins the user experience.
-Your text response MUST be limited to a SINGLE, extremely short introductory sentence (e.g., "Here is the history of Amala:", "These are the ingredients for Marùgbó:", or "Here is how to make it:"). DO NOT output bullet points, numbered lists, or paragraphs when talking about a retrieved dish. Let the card do the talking!`;
+Your text response MUST be limited to a SINGLE, extremely short introductory sentence that EXPLICITLY mentions the dish name (e.g., "Here is the history of Amala:", "These are the ingredients for Marùgbó:"). DO NOT output bullet points, numbered lists, or paragraphs when talking about a retrieved dish. Let the card do the talking!` : ""}`;
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {

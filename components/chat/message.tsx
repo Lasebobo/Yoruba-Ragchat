@@ -139,14 +139,7 @@ const PurePreviewMessage = ({
         .replace(/[\u0300-\u036f]/g, "");
 
       for (const dish of dishes ?? []) {
-        const dishName = (dish.name ?? "")
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "");
-          
-        if (dishName && fullText.includes(dishName)) {
-          dishCards.push(dish);
-        }
+        dishCards.push(dish);
       }
       return null;
     }
