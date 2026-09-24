@@ -62,11 +62,14 @@ function PureMessages({
 
   return (
     <div className="relative flex-1 bg-background">
-      {messages.length === 0 && !isLoading && (
-        <div className="absolute inset-0 overflow-y-auto pointer-events-auto">
-          <Greeting chatId={chatId} sendMessage={sendMessage} />
-        </div>
-      )}
+      <div 
+        className={cn(
+          "absolute inset-0 overflow-y-auto pointer-events-auto",
+          (messages.length > 0 || isLoading) && "hidden"
+        )}
+      >
+        <Greeting chatId={chatId} sendMessage={sendMessage} />
+      </div>
       <div
         className={cn(
           "absolute inset-0 touch-pan-y overflow-y-auto",

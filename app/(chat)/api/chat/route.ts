@@ -236,15 +236,30 @@ export async function POST(request: Request) {
       wantsMany ? 5 : 1
     );
 
+    const wantsIngredients = /\b(ingredient|ingredients|what is inside|what's inside|made of)\b/i.test(latestUserText);
+    const wantsHistory = /\b(history|origin|from|where|cultural|story|background|who made|invented)\b/i.test(latestUserText);
+    const wantsRecipe = /\b(recipe|cook|make|prepare|steps|instructions|how to)\b/i.test(latestUserText);
+
+    let sectionsToShow = {
+      ingredients: wantsIngredients || wantsRecipe,
+      history: wantsHistory,
+      recipe: wantsRecipe,
+    };
+    
+    // If the user didn't ask for specific parts, show everything by default.
+    if (!wantsIngredients && !wantsHistory && !wantsRecipe) {
+      sectionsToShow = { ingredients: true, history: true, recipe: true };
+    }
+
     const dishesForUI = retrievedDishes.map((dish) => ({
       _id: dish._id,
       name: dish.name ?? null,
       category: dish.category ?? null,
       picture: dish.picture ?? null,
-      ingredients: dish.ingredients ?? [],
-      history: dish.backgroundText ?? null,
-      regionalVariations: dish.additionalInfoText ?? null,
-      cookingInstructions: dish.recipeText ? dish.recipeText.split('\n').filter(s => s.trim()) : null,
+      ingredients: sectionsToShow.ingredients ? (dish.ingredients ?? []) : [],
+      history: sectionsToShow.history ? (dish.backgroundText ?? null) : null,
+      regionalVariations: sectionsToShow.history ? (dish.additionalInfoText ?? null) : null,
+      cookingInstructions: sectionsToShow.recipe && dish.recipeText ? dish.recipeText.split('\n').filter(s => s.trim()) : null,
     }));
 
     const dishContext =
